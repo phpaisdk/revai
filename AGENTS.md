@@ -7,11 +7,12 @@ Official RevAi provider for the PHP AI SDK. Part of the framework-agnostic [PHP 
 ```php
 use AiSdk\Content;
 use AiSdk\Generate;
+use AiSdk\LocalFile;
 use AiSdk\RevAi;
 
 RevAi::create(['apiKey' => '...']); // optional: environment variables below are read automatically
 
-$result = Generate::transcription(Content::audio('/path/to/audio.mp3'))
+$result = Generate::transcription(Content::audio(LocalFile::at('/path/to/audio.mp3')))
     ->model(RevAi::model('model-id'))
     ->run();
 
