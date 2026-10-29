@@ -7,6 +7,8 @@ namespace AiSdk\RevAi\Models;
 use AiSdk\ContentSource;
 use AiSdk\Contracts\BaseModel;
 use AiSdk\Contracts\TranscriptionModelInterface;
+use AiSdk\Exceptions\InvalidArgumentException;
+use AiSdk\Exceptions\InvalidResponseException;
 use AiSdk\Requests\TranscriptionRequest;
 use AiSdk\Responses\TranscriptionResponse;
 use AiSdk\Results\TranscriptData;
@@ -25,7 +27,7 @@ final class RevAiTranscriptionModel extends BaseModel implements TranscriptionMo
     } public function transcribe(TranscriptionRequest $r): TranscriptionResponse
     {
         if ($r->audio->source() !== ContentSource::Url) {
-            throw new \InvalidArgumentException('Rev AI requires a public audio URL.');
+            throw new InvalidArgumentException('Rev AI requires a public audio URL.');
         }$run = $this->runner($this->options->sdk);
         $job = $run->postJson(Url::joinPath($this->options->baseUrl, '/jobs'), array_replace(['source_config' => ['url' => $r->audio->url()]], $r->providerOptionsFor($this->provider())), $this->options->authHeaders(), $this->provider());
         $id = (string) ($job['id'] ?? '');
@@ -33,7 +35,7 @@ final class RevAiTranscriptionModel extends BaseModel implements TranscriptionMo
             $state = $run->getJson(Url::joinPath($this->options->baseUrl, '/jobs/' . $id), $this->options->authHeaders(), $this->provider());
         } while (($state['status'] ?? '') === 'in_progress');
         if (($state['status'] ?? '') !== 'transcribed') {
-            throw new \RuntimeException('Rev AI transcription failed.');
+            throw new InvalidResponseException('Rev AI transcription failed.');
         }$data = $run->getJson(Url::joinPath($this->options->baseUrl, '/jobs/' . $id . '/transcript'), $this->options->authHeaders(), $this->provider());
         $text = '';
         foreach ((array) ($data['monologues'] ?? []) as $m) {
